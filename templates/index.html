@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="de" data-bs-theme="auto">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Notizen WebApp</title>
+    <style>
+        html, body { height: 100%; overflow: hidden; }
+        .min-h-0 { min-height: 0; }
+        .scroll-y { overflow: auto; }
+        #detail-text { white-space: pre-wrap; }
+    </style>
+    <script>
+    // initial: System-Preference beachten
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.setAttribute('data-bs-theme', prefersDark ? 'dark' : 'light');
+
+    // bei Änderung live umschalten
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        document.documentElement.setAttribute('data-bs-theme', e.matches ? 'dark' : 'light');
+    });
+    </script>
+</head>
+<body class="container">
+    <div class="container-fluid h-100">
+        <div class="row g-3 h-100 flex-nowrap align-items-stretch">
+            <div class="col-4 d-flex flex-column min-h-0 overflow-hidden pt-4">
+                <div class="py-2 px-3 border rounded-3 flex-shrink-0 mb-3 d-flex justify-content-between align-items-center">
+                    <strong>Notizen</strong>
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="items-btn"  data-bs-toggle="modal" data-bs-target="#newnotice-modal">
+                        Neue Notiz
+                    </button>
+                </div>
+                <div class="list-group flex-grow-1 scroll-y rounded-3" id="menu">
+                    {% for item in items %}
+                    <a href="#" class="list-group-item list-group-item-action" aria-current="true" data-id="{{item.id}}" data-title="{{ item.title }}" data-time="{{ item.timestamp }}" data-text="{{ item.text }}" data-text="{{item.text}}">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">{{item.title}}</h5>
+                            <small>{{item.timestamp}}</small>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="col-8 d-flex min-h-0 overflow-hidden p-3 p-lg-4" style="max-height: 600px;">
+                <div class="card w-100 h-100 overflow-hidden">
+                    <div class="card-header d-flex justify-content-between align-items-start d-none" id="detail-header">
+                        <div class="me-3">
+                            <div id="detail-title" class="fw-semibold"></div>
+                            <small id="detail-time" class="text-body-secondary d-block"></small>
+                        </div>
+                        <div class="btn-group" role="group" aria-label="Basic outlined example">
+                            <button type="button" class="btn btn-outline-primary" id="del-notice-button">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3-fill" viewBox="0 0 16 16">
+                                    <path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5m-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5M4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06m6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528M8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5"/>
+                                </svg>
+                            </button>
+                            <button type="button" class="btn btn-outline-primary" id="edit-notice-button">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-fill" viewBox="0 0 16 16">
+                                    <path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.5.5 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11z"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body d-flex flex-column scroll-y min-h-0" id="detail-body" >
+                        <div id="empty-state" class="flex-grow-1 d-flex align-items-center justify-content-center text-muted">
+                            <p class="m-0 fs-5">Kein Eintrag ausgewählt</p>
+                        </div>
+                        <div id="detail-view" class="d-none">
+                            <p id="detail-text" class="mb-0"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="deletenotice-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="staticBackdropLabel">Bestätigen</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Bist du sicher dass du diese Notiz löschen willst?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Nein</button>
+                <button type="button" class="btn btn-primary" id="deletenotice-confirm">Ja</button>
+            </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="newnotice-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="staticBackdropLabel">Neue Notiz</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form class="form-floating">
+                    <input type="text" class="form-control mb-3" id="newnotice-title" placeholder="title" value="">
+                    <label for="newnotice-title">Titel</label>
+                </form>
+                <div class="form-floating">
+                    <textarea class="form-control" placeholder="Leave a comment here" id="newnotice-text" style="height: 300px"></textarea>
+                    <label for="newnotice-text">Notiz</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                <button type="button" id="newnotice-submit" class="btn btn-primary">Speichern</button>
+            </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="editnotice-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="staticBackdropLabel">Notiz bearbeiten</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form class="form-floating">
+                    <input type="text" class="form-control mb-3" id="editnotice-title" placeholder="title" value="">
+                    <label for="editnotice-title">Titel</label>
+                </form>
+                <div class="form-floating">
+                    <textarea class="form-control" placeholder="Leave a comment here" id="editnotice-text" style="height: 300px"></textarea>
+                    <label for="editnotice-text">Notiz</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Abbrechen</button>
+                <button type="button" id="editnotice-submit" class="btn btn-primary">Speichern</button>
+            </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
