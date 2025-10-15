@@ -1,4 +1,4 @@
-from .db_io import add_notice_to_db_and_get_id, get_all_notice_from_db, delete_notice_by_id, update_notice_by_id
+from db_io import add_notice_to_db_and_get_id, get_all_notice_from_db, delete_notice_by_id, update_notice_by_id
 from flask import Flask, render_template, request
 import json
 
@@ -43,3 +43,7 @@ def edit_route():
     jsonv = request.json
     update_notice_by_id(jsonv["id"], jsonv["title"], jsonv["text"])
     return json.dumps({})
+
+if __name__ == "__main__":
+    # So startet der Dev-Server mit Log-Ausgabe
+    app.run(debug=True, host="127.0.0.1", port=5000)
